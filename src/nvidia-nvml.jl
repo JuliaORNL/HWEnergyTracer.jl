@@ -15,7 +15,6 @@ function _run_nvidia(inputs)
     # Will throw an exception if not found/functional
     result = _test_libnvidia_ml!()
     result = _init_nvml()
-    # Implement the rest of the NVML power trace functions
     result = _write_power_trace(inputs)
     result = _finalize_nvml()
 
@@ -53,7 +52,7 @@ end
 function _write_power_trace(inputs::Inputs)::Int32
     # @TODO "Implement the rest of the NVML power trace functions"
 
-    file_name = inputs.file
+    file_name = inputs.output_file
     fh = open(file_name, "w")
 
     # write header
@@ -61,24 +60,44 @@ function _write_power_trace(inputs::Inputs)::Int32
     write(fh, "device_id $(inputs.device_id)\n")
     write(fh, "sample_rate $(inputs.sample_rate)\n")
     write(fh, "total_energy \n")
-    write(fh, "Time(ms)      Power(W)      Temperature(C)       \n")
+    write(fh,
+        "Time(ms)      Power(W)     Temperature(C)   Util.gpu    Util.mem \n")
 
-    power = Int32(0)
-    temperature = Int32(0)
+    power = Ref{Cuint}(0)
+    temperature = Ref{Cuint}(0)
+    utilization = nvmlUtilization_t(0, 0)
+    dcount = _get_number_of_devices()
+    println("Number of devices: $dcount")
 
     dh::Ptr{Cvoid} = _get_device_handle(inputs.device_id)
 
+    time0_ns = time_ns()
+
+    @inline function write_line(time0_ns)
+        time_ns = time_ns() - time0_ns
+        _get_device_power!(dh, power)
+        _get_device_temperature!(dh, temperature)
+        _get_device_utilization!(dh, utilization)
+
+        write(fh,
+            "$(time_ns)   $(power[])    $(temperature[])  $(utilization.gpu)  $(utilization.memory)\n")
+    end
+
     while true
         try
-
+            write_line(time0_ns)
+            sleep(inputs.sample_rate)
         catch InterruptException
             # write the last line
+            write_line(time0_ns)
             println("Interrupted. Closing file...")
+            close(fh)
+            println("Interrupted. Finalize NVML...")
+            _finalize_nvml()
             break
         end
     end
 
-    close(fh)
     return 0
 end
 
@@ -92,14 +111,39 @@ function _finalize_nvml()::Int32
     return res
 end
 
-# handler functions
-
-function _get_device_handle(device_id::UInt32)::Ptr{Cvoid}
-    device = Ptr{Cvoid}()
-    res = @ccall m_libnvidia_ml.nvmlDeviceGetHandleByIndex_v2(
-        device_id, device)::Int32
+function _get_number_of_devices()::Int32
+    device_count = Ref{Cuint}(0)
+    res = @ccall m_libnvidia_ml.nvmlDeviceGetCount_v2(
+        device_count::Ptr{Cuint})::Int32
     if res != 0
-        throw(ErrorException("Failed to get device handle for device_id: $device_id"))
+        throw(ErrorException("Failed to get number of devices."))
+    end
+    return device_count[]
+end
+
+# handler functions
+function _get_device_handle(device_id)::Ptr{Cvoid}
+    device = Ptr{Cvoid}()
+    devid = Cuint(device_id)
+    res = @ccall m_libnvidia_ml.nvmlDeviceGetHandleByIndex_v2(
+        devid::Cuint, device::Ptr{Cvoid})::Int32
+    if res != 0
+        throw(ErrorException("Failed to get device handle for device_id: $device_id, res: $res"))
     end
     return device
+end
+
+function _get_device_temperature(dh, temperature)
+    @ccall m_libnvidia_ml.nvmlDeviceGetTemperature(
+        dh::Ptr{Cvoid}, 0::Int32, temperature::Ptr{Cuint})::Int32
+end
+
+function _get_device_power(dh, power)
+    @ccall m_libnvidia_ml.nvmlDeviceGetPowerUsage(
+        dh::Ptr{Cvoid}, power::Ptr{Cuint})::Int32
+end
+
+function _get_device_utilization(dh, utilization)
+    @ccall m_libnvidia_ml.nvmlDeviceGetUtilizationRates(
+        dh::Ptr{Cvoid}, utilization::nvmlUtilization_t)::Int32
 end
