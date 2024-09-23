@@ -28,6 +28,10 @@ function _parse_args(args::Vector{String})::Inputs
         help = "output file"
         arg_type = String
         default = "power-trace.csv"
+        "-f", "--flush_rate"
+        help = "flush rate in seconds"
+        arg_type = UInt32
+        default = UInt32(10)
     end
 
     parsed_args = ArgParse.parse_args(args, parse_settings)
@@ -36,5 +40,6 @@ function _parse_args(args::Vector{String})::Inputs
     device_id = parsed_args["device_id"]
     sample_rate = parsed_args["sample_rate"]
     output_file = parsed_args["output"]
-    return Inputs(vendor, device_id, sample_rate, output_file)
+    flush_rate = parsed_args["flush_rate"]
+    return Inputs(vendor, device_id, sample_rate, output_file, flush_rate)
 end

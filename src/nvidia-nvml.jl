@@ -86,7 +86,7 @@ function _write_power_trace(inputs::Inputs)::Int32
     while true
         try
             write_line(time0_ns)
-            sleep(inputs.sample_rate)
+            sleep(Float64(inputs.sample_rate / 1000))
         catch InterruptException
             # write the last line
             write_line(time0_ns)
