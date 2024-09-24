@@ -2,14 +2,15 @@ module HWEnergyTracer
 
 import Libdl
 
-# location of the NVML shared library
-m_libnvidia_ml = nothing
+# location of the AMD librocm_smi shared library from Preferences. 
+# No need for libnvidia-ml as it's handled by the CUDA.jl package
+m_librocm_smi = nothing
 
 include("structs.jl")
 include("args.jl")
 
-#include("nvidia-nvml.jl")
 include("cuda-nvml.jl")
+include("librocm_smi.jl")
 
 function main(args::Vector{String})
     inputs::Inputs = _parse_args(args)

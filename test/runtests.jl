@@ -1,4 +1,4 @@
 
 if "--test-nvidia-nvml" in ARGS
-    include("test-nvidia-nvml.jl")
+    include("test-cuda-nvml.jl")
 end
