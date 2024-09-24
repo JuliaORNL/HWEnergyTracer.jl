@@ -8,7 +8,8 @@ m_libnvidia_ml = nothing
 include("structs.jl")
 include("args.jl")
 
-include("nvidia-nvml.jl")
+#include("nvidia-nvml.jl")
+include("cuda-nvml.jl")
 
 function main(args::Vector{String})
     inputs::Inputs = _parse_args(args)
