@@ -6,9 +6,3 @@ struct Inputs
     output_file::String
     flush_rate::UInt32 # seconds
 end
-
-#nvml-only
-struct nvmlUtilization_t
-    gpu::Cuint
-    memory::Cuint
-end
