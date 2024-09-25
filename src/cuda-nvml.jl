@@ -58,8 +58,8 @@ function _write_line(dh, fh, current_time, time0_ns, flush_rate)
     utilization = NVML.utilization_rates(dh)
 
     Printf.@printf(fh,
-        "%.6f   %d   %d   %.2f  %.2f\n", Float64(elapsed),
-        power, temperature, utilization.compute, utilization.memory)
+        "%.6f   %d   %d   %d  %d\n", Float64(elapsed),
+        power, temperature, utilization.compute*100, utilization.memory*100)
 
     if floor(elapsed) % flush_rate == 0
         flush(fh)
