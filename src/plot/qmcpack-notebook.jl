@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 259e151c-7c3e-11ef-19d0-bf5bc8811447
 md"""
-# QMCPACK NiO Power Analysis
+# Power Analysis
 """
 
 # ╔═╡ 03ea1628-a764-4fd1-b13d-f607346998a2
@@ -15,67 +15,83 @@ import Plots
 import CSV
 import DataFrames
 import NumericalIntegration
+import Printf
 end
 
 # ╔═╡ 14ef75c8-77b2-488f-98c2-f2df95c3f153
 begin
 
-function plot_qmcpack_4096()
-    trace_file = "/home/mgodoy/data/qmcpack-power/A100/power_NiO-S8_w4096.csv"
-    df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
+function plot_energy(trace_file, title, annotated_text = "")
+
+	df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
 	e = NumericalIntegration.cumul_integrate(t,P)
 	
 	p = Plots.plot(t, P, label="Power (W)", linecolor=:red)
 	Plots.plot!(p, t, T, label="Temperature (C)")
-	Plots.plot!(p, t, U, label="Utilization (%GPU)")
+	Plots.plot!(p, t, U, label="GPU Utilization (%)")
+
+	xlimit = round((maximum(t)/100)+1)*100
+	ylimit = round((maximum(P)/100)+1)*100
+	
+	xlims = (0, xlimit)
+	ylims = (0, ylimit)
 	
 	Plots.plot!(p, 
-		        title = "QMCPACK NiO on NVIDIA A100", 
+		        title = title, 
 		        xlabel = "time (s)", 
 		        ylabel = "W,C,%", 
-		        xlims = (0, 2200), 
-		        ylims = (0, 130),
+		        xlims = xlims, 
+		        ylims = ylims,
 		        legend=:topleft )
-	Plots.annotate!(p, 900, 120, Plots.text("384 electrons\n4,096 walkers", :left, 8, "courier"))	
+	
+	# annotated = "\n"*String(maximum(e))
+	max_energy = maximum(e)
+	annotated = annotated_text*"\nE = "*Printf.@sprintf("%.2f", max_energy/1000)*" kJ"
+	Plots.annotate!(p, xlims[2]/2, ylims[2]*3.7/4, 
+		Plots.text(annotated, :left, 8, "courier") )
+
+	ylims_energy = (0, round(max_energy/1e4+1)*1e4)
+
 
 	axis2 = Plots.twinx();
-	Plots.plot!(axis2, t, e, label="Energy (J)", ylims = (0, 200_000), ylabel = "J", legend=:topright)
-end
-
-plot_qmcpack_4096()
-
-end
-
-# ╔═╡ 4294720e-744a-4cbf-8ff9-20a00f37a9a3
-begin
-
-function plot_qmcpack_2048()
-    trace_file = "/home/mgodoy/data/qmcpack-power/A100/power_NiO-S8_w2048.csv"
-    df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
-	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
-	e = NumericalIntegration.cumul_integrate(t,P)
+	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:bottomright)
 	
-	p = Plots.plot(t, P, label="Power (W)", linecolor=:red)
-	Plots.plot!(p, t, T, label="Temperature (C)")
-	Plots.plot!(p, t, U, label="Utilization (%GPU)")
+end
+
+trace_file = "/home/wfg/work/qmcpack-power/H100/full-precision/power_NiO-S128_w68-production.csv"
 	
-	Plots.plot!(p, 
-		        title = "QMCPACK NiO on NVIDIA A100", 
-		        xlabel = "time (s)", 
-		        ylabel = "W, C, %", 
-		        xlims = (0, 2200), 
-		        ylims = (0, 130),
-		        legend=:topleft )
-	Plots.annotate!(p, 900, 120, Plots.text("384 electrons\n2,048 walkers", :left, 8, "courier"))	
-
-	axis2 = Plots.twinx();
-	Plots.plot!(axis2, t, e, label="Energy (J)", ylims = (0, 200_000), ylabel = "J", legend=:topright)
-end
-
-plot_qmcpack_2048()
+plot_energy(trace_file, "NVIDIA H100", "36 walkers") 
 
 end
+	
+	
+# function plot_qmcpack_48()
+#     trace_file = "/home/wfg/work/qmcpack-power/A100/full-precision/power_NiO-S128_w48.csv"
+#     df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
+# 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
+# 	e = NumericalIntegration.cumul_integrate(t,P)
+	
+# 	p = Plots.plot(t, P, label="Power (W)", linecolor=:red)
+# 	Plots.plot!(p, t, T, label="Temperature (C)")
+# 	Plots.plot!(p, t, U, label="Utilization (%GPU)")
+	
+# 	Plots.plot!(p, 
+# 		        title = "QMCPACK NiO on NVIDIA A100", 
+# 		        xlabel = "time (s)", 
+# 		        ylabel = "W,C,%", 
+# 		        xlims = (0, 5600), 
+# 		        ylims = (0, 150),
+# 		        legend=:topleft )
+# 	Plots.annotate!(p, 3200, 130, Plots.text("6,144 electrons\n48 walkers", :left, 8, "courier"))	
+
+# 	axis2 = Plots.twinx();
+# 	Plots.plot!(axis2, t, e, label="Energy (J)", ylims = (0, 500_000), ylabel = "J", legend=:bottomleft)
+# end
+
+# plot_qmcpack_48()
+
+# end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -84,6 +100,7 @@ CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 NumericalIntegration = "e7bfaba1-d571-5449-8927-abc22e82249b"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 CSV = "~0.10.14"
@@ -96,9 +113,9 @@ Plots = "~1.40.8"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.2"
+julia_version = "1.9.4"
 manifest_format = "2.0"
-project_hash = "7a9d36e2b9d78de558f3ab8a04b85a14a67decae"
+project_hash = "4734cde63601d1e95d3331c7104e17823bc465b1"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -509,12 +526,12 @@ version = "0.16.5"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.84.0+0"
+version = "8.4.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -523,7 +540,7 @@ uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.10.2+0"
+version = "1.11.0+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -1333,7 +1350,7 @@ version = "1.1.6+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.48.0+0"
+version = "1.52.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1363,6 +1380,5 @@ version = "1.4.1+1"
 # ╠═259e151c-7c3e-11ef-19d0-bf5bc8811447
 # ╠═03ea1628-a764-4fd1-b13d-f607346998a2
 # ╠═14ef75c8-77b2-488f-98c2-f2df95c3f153
-# ╠═4294720e-744a-4cbf-8ff9-20a00f37a9a3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
