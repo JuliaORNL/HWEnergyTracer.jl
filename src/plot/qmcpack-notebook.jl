@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -19,15 +19,16 @@ import Printf
 end
 
 # ╔═╡ 14ef75c8-77b2-488f-98c2-f2df95c3f153
-begin
+
 
 function plot_energy(trace_file, title, annotated_text = "")
 
 	df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
 	e = NumericalIntegration.cumul_integrate(t,P)
-	
-	p = Plots.plot(t, P, label="Power (W)", linecolor=:red)
+
+	Plots.theme(:seaborn_colorblind)
+	p = Plots.plot(t, P, label="Power (W)")
 	Plots.plot!(p, t, T, label="Temperature (C)")
 	Plots.plot!(p, t, U, label="GPU Utilization (%)")
 
@@ -48,50 +49,32 @@ function plot_energy(trace_file, title, annotated_text = "")
 	# annotated = "\n"*String(maximum(e))
 	max_energy = maximum(e)
 	annotated = annotated_text*"\nE = "*Printf.@sprintf("%.2f", max_energy/1000)*" kJ"
-	Plots.annotate!(p, xlims[2]/2, ylims[2]*3.7/4, 
-		Plots.text(annotated, :left, 8, "courier") )
+	Plots.annotate!(p, xlims[2]*4.2/10, ylims[2]*9/10, 
+		Plots.text(annotated, :left, 8, "courier"))
 
-	ylims_energy = (0, round(max_energy/1e4+1)*1e4)
+	ylims_energy = (0, round(max_energy/1e5+1)*1e5)
 
 
 	axis2 = Plots.twinx();
-	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:bottomright)
+	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:topright, linecolor = :red)
 	
 end
-
-trace_file = "/home/wfg/work/qmcpack-power/H100/full-precision/power_NiO-S128_w68-production.csv"
 	
-plot_energy(trace_file, "NVIDIA H100", "36 walkers") 
 
+# ╔═╡ c134b1ef-8a98-4d77-b719-8e86062395e3
+begin
+trace_file_full = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full.csv"
+	
+plot_energy(trace_file_full, "NVIDIA H100 Full", "68 walkers") 
 end
-	
-	
-# function plot_qmcpack_48()
-#     trace_file = "/home/wfg/work/qmcpack-power/A100/full-precision/power_NiO-S128_w48.csv"
-#     df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
-# 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
-# 	e = NumericalIntegration.cumul_integrate(t,P)
-	
-# 	p = Plots.plot(t, P, label="Power (W)", linecolor=:red)
-# 	Plots.plot!(p, t, T, label="Temperature (C)")
-# 	Plots.plot!(p, t, U, label="Utilization (%GPU)")
-	
-# 	Plots.plot!(p, 
-# 		        title = "QMCPACK NiO on NVIDIA A100", 
-# 		        xlabel = "time (s)", 
-# 		        ylabel = "W,C,%", 
-# 		        xlims = (0, 5600), 
-# 		        ylims = (0, 150),
-# 		        legend=:topleft )
-# 	Plots.annotate!(p, 3200, 130, Plots.text("6,144 electrons\n48 walkers", :left, 8, "courier"))	
 
-# 	axis2 = Plots.twinx();
-# 	Plots.plot!(axis2, t, e, label="Energy (J)", ylims = (0, 500_000), ylabel = "J", legend=:bottomleft)
-# end
 
-# plot_qmcpack_48()
-
-# end
+# ╔═╡ a7bd2742-8340-41e9-87ec-b5e6a78070dd
+begin
+trace_file_mixed = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-mixed.csv"
+	
+plot_energy(trace_file_mixed, "NVIDIA H100 Mixed", "68 walkers") 
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1377,8 +1360,10 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═259e151c-7c3e-11ef-19d0-bf5bc8811447
+# ╟─259e151c-7c3e-11ef-19d0-bf5bc8811447
 # ╠═03ea1628-a764-4fd1-b13d-f607346998a2
 # ╠═14ef75c8-77b2-488f-98c2-f2df95c3f153
+# ╠═c134b1ef-8a98-4d77-b719-8e86062395e3
+# ╠═a7bd2742-8340-41e9-87ec-b5e6a78070dd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
