@@ -94,8 +94,8 @@ function _write_line_amd(dev_id, fh, current_time, time0_ns, flush_rate)
 	utilization_memory = _get_device_utilization_memory(dev_id)
 
 	Printf.@printf(fh,
-		"%.6f   %.2f   %.2f   %d  %.2f\n", Float64(elapsed),
-		power, temperature, utilization_compute, utilization_memory)
+        "%.6f %d %d %d %d\n", Float64(elapsed),
+        power, temperature, utilization_compute, utilization_memory*100)
 
 	if floor(elapsed) % flush_rate == 0
 		flush(fh)
