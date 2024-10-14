@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -21,13 +21,14 @@ end
 # ╔═╡ 14ef75c8-77b2-488f-98c2-f2df95c3f153
 
 
-function plot_energy(trace_file, title, annotated_text = "")
+function plot_energy(trace_file, title, annotated_text = "", output_file = "")
 
-	df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
+	df = CSV.read(trace_file, DataFrames.DataFrame; skipto=6, header=false, delim=' ')
 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
 	e = NumericalIntegration.cumul_integrate(t,P)
 
-	Plots.theme(:seaborn_colorblind)
+	# Plots.theme(Plots.:seaborn_colorblind)
+	Plots.default(show = true)
 	p = Plots.plot(t, P, label="Power (W)")
 	Plots.plot!(p, t, T, label="Temperature (C)")
 	Plots.plot!(p, t, U, label="GPU Utilization (%)")
@@ -46,7 +47,6 @@ function plot_energy(trace_file, title, annotated_text = "")
 		        ylims = ylims,
 		        legend=:topleft )
 	
-	# annotated = "\n"*String(maximum(e))
 	max_energy = maximum(e)
 	annotated = annotated_text*"\nE = "*Printf.@sprintf("%.2f", max_energy/1000)*" kJ"
 	Plots.annotate!(p, xlims[2]*4.2/10, ylims[2]*9/10, 
@@ -56,8 +56,14 @@ function plot_energy(trace_file, title, annotated_text = "")
 
 
 	axis2 = Plots.twinx();
-	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:topright, linecolor = :red)
-	
+	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:topright, linecolor=:black, show = true)
+
+	if !isempty(output_file)
+	    Plots.savefig(output_file)
+	end
+
+	Plots.display(p)
+
 end
 	
 
@@ -65,7 +71,7 @@ end
 begin
 trace_file_full = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full.csv"
 	
-plot_energy(trace_file_full, "NVIDIA H100 Full", "68 walkers") 
+plot_energy(trace_file_full, "NVIDIA H100 full precision", "68 walkers", "qmc-h100-w68-full.pdf") 
 end
 
 
@@ -73,7 +79,7 @@ end
 begin
 trace_file_mixed = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-mixed.csv"
 	
-plot_energy(trace_file_mixed, "NVIDIA H100 Mixed", "68 walkers") 
+plot_energy(trace_file_mixed, "NVIDIA H100 mixed-precision", "68 walkers", "qmc-h100-w68-mixed.pdf") 
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
