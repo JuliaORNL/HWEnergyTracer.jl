@@ -47,19 +47,24 @@ function _write_header(fh, inputs)
     write(fh, "device_id $(inputs.device_id)\n")
     write(fh, "sample_rate $(inputs.sample_rate)\n")
     write(fh, "total_energy \n")
-    write(fh,
-        "Time(s)                Power(W)  Temperature(C) Util.gpu(%) Util.mem(%) \n")
+    write(fh, "Time(s) Power(W) Temperature(C) Util.gpu(%) Util.mem(%) Clock.sm(MHz) Clock.graphics(MHz) Clock.memory(MHz) Clock.vide(MHz)\n")
 end
+(sm = 300, graphics = 300, memory = 405, video = 555)
 
 function _write_line(dh, fh, current_time, time0_ns, flush_rate)
     elapsed = (current_time - time0_ns) / 1E9
     power = NVML.power_usage(dh)
     temperature = NVML.temperature(dh)
     utilization = NVML.utilization_rates(dh)
+    clock_sm = NVML.clock_info(dh)[:sm]
+    clock_graphics = NVML.clock_info(dh)[:graphics]
+    clock_memory = NVML.clock_info(dh)[:memory]
+    clock_video = NVML.clock_info(dh)[:video]
 
     Printf.@printf(fh,
-        "%.6f %d %d %d %d\n", Float64(elapsed),
-        power, temperature, utilization.compute*100, utilization.memory*100)
+        "%.6f %d %d %d %d %d %d %d %d\n", Float64(elapsed),
+        power, temperature, utilization.compute*100, utilization.memory*100, 
+        clock_sm, clock_graphics, clock_memory, clock_video)
 
     if floor(elapsed) % flush_rate == 0
         flush(fh)
