@@ -47,9 +47,8 @@ function _write_header(fh, inputs)
     write(fh, "device_id $(inputs.device_id)\n")
     write(fh, "sample_rate $(inputs.sample_rate)\n")
     write(fh, "total_energy \n")
-    write(fh, "Time(s) Power(W) Temperature(C) Util.gpu(%) Util.mem(%) Clock.sm(MHz) Clock.graphics(MHz) Clock.memory(MHz) Clock.vide(MHz)\n")
+    write(fh, "Time(s) Power(W) Temperature(C) Util.gpu(%) Util.mem(%) Clock.sm(MHz) Clock.graphics(MHz) Clock.memory(MHz) Clock.video(MHz)\n")
 end
-(sm = 300, graphics = 300, memory = 405, video = 555)
 
 function _write_line(dh, fh, current_time, time0_ns, flush_rate)
     elapsed = (current_time - time0_ns) / 1E9
