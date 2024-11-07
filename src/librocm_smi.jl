@@ -82,8 +82,7 @@ function _write_header_amd(fh, inputs)
 	write(fh, "device_id $(inputs.device_id)\n")
 	write(fh, "sample_rate $(inputs.sample_rate)\n")
 	write(fh, "total_energy \n")
-	write(fh,
-		"Time(s)                Power(W)  Temperature(C) Util.gpu(%) Util.mem(%) \n")
+	write(fh, "Time(s) Power(W) Temperature(C) Util.gpu(%) Util.mem(%)\n")
 end
 
 function _write_line_amd(dev_id, fh, current_time, time0_ns, flush_rate)
