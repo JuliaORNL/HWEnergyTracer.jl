@@ -59,7 +59,7 @@ function _write_line(dh, fh, current_time, time0_ns, flush_rate)
     clock_memory = NVML.clock_info(dh)[:memory]
 
     Printf.@printf(fh,
-        "%.6f %d %d %d %d %d %d %d %d\n", Float64(elapsed),
+        "%.6f %d %d %d %d %d %d\n", Float64(elapsed),
         power, temperature, utilization.compute*100, utilization.memory*100, 
         clock_sm, clock_memory)
 
