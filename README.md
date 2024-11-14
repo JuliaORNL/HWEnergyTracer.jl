@@ -61,7 +61,7 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
 
 ## Running the tracer
 
-    Typically the tracer would run in parallel to an application. Allow ~10-15s to launch before (due to JIT) and kill after (for static power), as in the following script:
+Typically the tracer would run in parallel to an application. Allow ~10-15s to launch before (due to JIT) and kill after (for static power), as in the following script:
 
     ```
     HWTracer_DIR=/path/to/HWEnergyTracer.jl
@@ -81,7 +81,7 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
     echo "End HWEnergyTracer.jl"
     ```
     
-    The tracer will generate a CSV file with power information. The CSV file will have the following columns for NVIDIA and AMD GPUs (this will be updated as needed):
+The tracer will generate a CSV file with power information. The CSV file will have the following columns for NVIDIA and AMD GPUs (this will be updated as needed):
 
     ```
     NVIDIA NVML Power Trace
@@ -106,9 +106,9 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
     3.252087 87 36 0 0
     ```
 
-    Examples for doing analysis on the power traces can be found in the `src/plot` directory.
+Examples for doing analysis on the power traces can be found in the `src/plot` directory.
 
-    Argument options for the tracer are:
+Argument options for the tracer are:
 
     - `-d` device id, relevant to multi-GPU nodes. Default is 0 and will only trace one GPU at a time. Launch a separate tracer process for each GPU.
     - `-o` output file name for the csv file. Default is `power.csv`
