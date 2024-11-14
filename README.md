@@ -63,7 +63,7 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
 
 Typically the tracer would run in parallel to an application. Allow ~10-15s to launch before (due to JIT) and kill after (for static power), as in the following script:
 
-    ```
+    ```bash
     HWTracer_DIR=/path/to/HWEnergyTracer.jl
     echo "Starting HWEnergyTracer.jl"
     julia -t 1 --project=$HWTracer_DIR $HWTracer_DIR/hw-energy-tracer.jl -v AMD -r 1 -o power_1ms.csv &
@@ -81,7 +81,9 @@ Typically the tracer would run in parallel to an application. Allow ~10-15s to l
     echo "End HWEnergyTracer.jl"
     ```
     
-The tracer will generate a CSV file with power information. The CSV file will have the following columns for NVIDIA and AMD GPUs (this will be updated as needed):
+The tracer will generate a CSV file with power information. The CSV file will have the following columns (this will be updated as needed):
+
+NVIDIA GPUs:
 
     ```
     NVIDIA NVML Power Trace
@@ -92,6 +94,8 @@ The tracer will generate a CSV file with power information. The CSV file will ha
     0.000000 44 32 0 0 210 1512
     0.380302 44 32 0 0 210 1512
     ```
+
+and AMD GPUs:
 
     ```
     ROCM SMI Power Trace
@@ -110,11 +114,11 @@ Examples for doing analysis on the power traces can be found in the `src/plot` d
 
 Argument options for the tracer are:
 
-    - `-d` device id, relevant to multi-GPU nodes. Default is 0 and will only trace one GPU at a time. Launch a separate tracer process for each GPU.
-    - `-o` output file name for the csv file. Default is `power.csv`
-    - `-r` sampling rate in milliseconds. Default is 1ms
-    - `-v` vendor. Default is `NVIDIA`. Other option is `AMD` for AMD GPUs.
-    - `-f` flush rate in seconds. Default is 10s. The tracer will flush the data to the file every `f` seconds.
+- `-d` device id, relevant to multi-GPU nodes. Default is 0 and will only trace one GPU at a time. Launch a separate tracer process for each GPU.
+- `-o` output file name for the csv file. Default is `power.csv`
+- `-r` sampling rate in milliseconds. Default is 1ms
+- `-v` vendor. Default is `NVIDIA`. Other option is `AMD` for AMD GPUs.
+- `-f` flush rate in seconds. Default is 10s. The tracer will flush the data to the file every `f` seconds.
 
 ## Acknowledgements
 
