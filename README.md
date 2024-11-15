@@ -23,13 +23,13 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
     Point at the local CUDA installation, *replace below with the appropriate CUDA version*:
     
     ```
-    $ julia --project -e 'using CUDA; CUDA.set_runtime_version!(v"12.6"; local_toolkit=true)'
+    julia --project -e 'using CUDA; CUDA.set_runtime_version!(v"12.6"; local_toolkit=true)'
     ```
     
     Verify the installation
     
-    ```
-    $ julia --project -e 'using CUDA; CUDA.versioninfo()'
+```
+    julia --project -e 'using CUDA; CUDA.versioninfo()'
     CUDA runtime 12.6, local installation
     CUDA driver 12.5
     NVIDIA driver 555.42.6
@@ -37,7 +37,7 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
     2 devices:
     0: NVIDIA H100 NVL (sm_90, 93.119 GiB / 93.584 GiB available)
     1: NVIDIA H100 NVL (sm_90, 93.119 GiB / 93.584 GiB available)
-    ```
+```
 
 3. For AMD GPUs:
    
@@ -63,7 +63,7 @@ Provide energy information, e.g. simple power traces, wrapping vendor tools. GPU
 
 Typically the tracer would run in parallel to an application. Allow ~10-15s to launch before (due to JIT) and kill after (for static power), as in the following script:
 
-    ```bash
+```bash
     HWTracer_DIR=/path/to/HWEnergyTracer.jl
     echo "Starting HWEnergyTracer.jl"
     julia -t 1 --project=$HWTracer_DIR $HWTracer_DIR/hw-energy-tracer.jl -v AMD -r 1 -o power_1ms.csv &
@@ -79,13 +79,13 @@ Typically the tracer would run in parallel to an application. Allow ~10-15s to l
     sleep 15
     kill -2 "$tracer_pid"
     echo "End HWEnergyTracer.jl"
-    ```
+```
     
 The tracer will generate a CSV file with power information. The CSV file will have the following columns (this will be updated as needed):
 
 NVIDIA GPUs:
 
-    ```
+```
     NVIDIA NVML Power Trace
     device_id 0
     sample_rate 100.0
@@ -93,11 +93,11 @@ NVIDIA GPUs:
     Time(s) Power(W) Temperature(C) Util.gpu(%) Util.mem(%) Clock.sm(MHz) Clock.memory(MHz)
     0.000000 44 32 0 0 210 1512
     0.380302 44 32 0 0 210 1512
-    ```
+```
 
 and AMD GPUs:
 
-    ```
+```
     ROCM SMI Power Trace
     device_id 0
     sample_rate 1000.0
@@ -108,7 +108,7 @@ and AMD GPUs:
     1.246900 88 35 0 0
     2.249522 88 36 0 0
     3.252087 87 36 0 0
-    ```
+```
 
 Examples for doing analysis on the power traces can be found in the `src/plot` directory.
 
