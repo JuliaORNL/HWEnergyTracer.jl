@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -18,32 +18,61 @@ import NumericalIntegration
 import Printf
 end
 
-# ╔═╡ 14ef75c8-77b2-488f-98c2-f2df95c3f153
+# ╔═╡ 3759d4b1-d36f-45ce-a4d2-d901e6de67f2
+# modify this for the location of the express-data repo
+root_dir = "/Users/wfg/workspace/"
 
+# ╔═╡ 8e0986b5-1e5a-4abb-a6ef-78b60f21c7bf
+function plot_energy(trace_file, title, annotated_text = "", figure_name = "")
 
-function plot_energy(trace_file, title, annotated_text = "")
-
-	df = CSV.read(trace_file, DataFrames.DataFrame; header=5, delim=' ')
+	df = CSV.read(trace_file, DataFrames.DataFrame; header=false, skipto=6, delim=' ')
 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
 	e = NumericalIntegration.cumul_integrate(t,P)
 
-	Plots.theme(:seaborn_colorblind)
-	p = Plots.plot(t, P, label="Power (W)")
-	Plots.plot!(p, t, T, label="Temperature (C)")
-	Plots.plot!(p, t, U, label="GPU Utilization (%)")
+	dmc_i = 1
+	for i in 1:length(t)
+		if t[i] > 1200
+			dmc_i = i
+			break
+		end
+	end
+	@show dmc_i
+	dmc_gpu = U[dmc_i:length(U)-100]
+	dmc_t   = t[dmc_i:length(t)-100]
 
-	xlimit = round((maximum(t)/100)+1)*100
-	ylimit = round((maximum(P)/100)+1)*100
+	average_gpu = NumericalIntegration.integrate(dmc_t, dmc_gpu)/(dmc_t[end]-dmc_t[begin])
+	@show average_gpu
+	#@show dmc_t
+	
+ #    f = zip(t,U) 
+	# for i in f
+	# 	if i[1] > 525
+	# 	    @show i
+	# 	end	
+	# end
+
+	p = Plots.plot(t, P, label="Power (W)")
+	Plots.plot!(p, t, U, label="GPU Utilization (%)")
+	Plots.plot!(p, t, T, label="Temperature (C)")
+	
+
+	xlimit = floor((maximum(t)/100)+1)*100
+	ylimit = floor((maximum(P)/100)+1)*100
 	
 	xlims = (0, xlimit)
 	ylims = (0, ylimit)
 	
+   #xlims = (0, 800)
+	# ylims = (0, 400)
+	
 	Plots.plot!(p, 
 		        title = title, 
 		        xlabel = "time (s)", 
-		        ylabel = "W,C,%", 
+		        ylabel = "W, %, C", 
 		        xlims = xlims, 
 		        ylims = ylims,
+		        xminorticks = 4,
+		        yminorticks = 5,
 		        legend=:topleft )
 	
 	# annotated = "\n"*String(maximum(e))
@@ -52,29 +81,205 @@ function plot_energy(trace_file, title, annotated_text = "")
 	Plots.annotate!(p, xlims[2]*4.2/10, ylims[2]*9/10, 
 		Plots.text(annotated, :left, 8, "courier"))
 
+	Plots.annotate!(p, xlims[2]*6.3/10, ylims[2]*6.9/10, 
+		Plots.text("DMC", :left, 11, "courier"))
+
+	Plots.annotate!(p, xlims[2]*3/10, ylims[2]*6.9/10, 
+		Plots.text("VMC", :left, 11, "courier"))
+
 	ylims_energy = (0, round(max_energy/1e5+1)*1e5)
 
 
 	axis2 = Plots.twinx();
-	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:topright, linecolor = :red)
-	
+	Plots.plot!(axis2, t, e, label="Energy (J)", xlims = xlims, ylims = ylims_energy, ylabel = "J", legend=:topright, linecolor = :black, yminorticks = 5)
+
+	# if !isempty(figure_name)
+	#   Plots.savefig(figure_name)
+	# end
 end
+
+# ╔═╡ fe987f15-a7ad-469f-a637-eb5010b7b836
+# begin
+# trace_file_full_1ms = root_dir*"express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full-1ms.csv"
 	
+# plot_energy(trace_file_full_1ms, "NVIDIA H100 Full 1ms", "68 walkers", "qmcpack-w68-full-1ms-h100.pdf") 
+# end
 
 # ╔═╡ c134b1ef-8a98-4d77-b719-8e86062395e3
-begin
-trace_file_full = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full.csv"
+# begin
+# trace_file_full_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full-10ms.csv"
 	
-plot_energy(trace_file_full, "NVIDIA H100 Full", "68 walkers") 
-end
+# plot_energy(trace_file_full_10ms, "NVIDIA H100 Full 10ms", "68 walkers", "qmcpack-w68-full-10ms-h100.pdf") 
+# end
 
+
+# ╔═╡ 55d0ca8c-931e-45d0-9c2f-7ac35fb9e964
+# begin
+# trace_file_full_100ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full-100ms.csv"
+	
+# plot_energy(trace_file_full_100ms, "NVIDIA H100 Full 100ms", "68 walkers", "qmcpack-w68-full-100ms-h100.pdf") 
+# end
+
+# ╔═╡ d3136227-3381-4d47-af1e-08961629c52c
+# begin
+# trace_file_full_1s = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-full-1s.csv"
+	
+# plot_energy(trace_file_full_1s, "NVIDIA H100 Full 1s", "68 walkers", "qmcpack-w68-full-1s-h100.pdf") 
+# end
 
 # ╔═╡ a7bd2742-8340-41e9-87ec-b5e6a78070dd
-begin
-trace_file_mixed = "/home/wfg/workspace/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-mixed.csv"
+# begin
+# trace_file_mixed = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w68-mixed-10ms.csv"
 	
-plot_energy(trace_file_mixed, "NVIDIA H100 Mixed", "68 walkers") 
+# plot_energy(trace_file_mixed, "NVIDIA H100 Mixed 10ms", "68 walkers", "qmcpack-w68-mixed-10ms-h100.pdf") 
+# end
+
+# ╔═╡ 0ddad5e7-0ec0-47cc-a6e0-fdece6b96101
+# begin
+# trace_file_mixed_w100 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w100-mixed-10ms.csv"
+	
+# plot_energy(trace_file_mixed_w100, "NVIDIA H100 Mixed 10ms", "100 walkers", "qmcpack-w100-mixed-10ms-h100.pdf")
+# end
+
+# ╔═╡ b410edc1-3d01-4eb9-ad7f-df57c9b64d9d
+# begin
+# trace_file_A100_w58_1ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w58-full-1ms.csv"
+	
+# plot_energy(trace_file_A100_w58_1ms, "NVIDIA A100 Full 1ms", "58 walkers", "qmcpack-w58-full-1ms-a100.pdf")
+# end
+
+# ╔═╡ 76010b94-7946-4a21-8ca7-6ab64a82a982
+# begin
+# trace_file_A100_w58_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w58-full-10ms.csv"
+	
+# plot_energy(trace_file_A100_w58_10ms, "NVIDIA A100 Full 10ms", "58 walkers", "qmcpack-w58-full-10ms-a100.pdf")
+# end
+
+# ╔═╡ 7c613b96-0d95-4dd7-956f-fb9f2cb874cf
+# begin
+# trace_file_A100_w58_100ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w58-full-100ms.csv"
+	
+# plot_energy(trace_file_A100_w58_100ms, "NVIDIA A100 Full 100ms", "58 walkers", "qmcpack-w58-full-100ms-a100.pdf")
+# end
+
+# ╔═╡ 924e7896-9c5b-4202-be9d-69144130dbbd
+# begin
+# trace_file_A100_w58_1s = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w58-full-1s.csv"
+	
+# plot_energy(trace_file_A100_w58_1s, "NVIDIA A100 Full 1s", "58 walkers", "qmcpack-w58-full-1s-a100.pdf")
+# end
+
+# ╔═╡ 76e305e3-7074-439d-949c-dca7ee4181dc
+# begin
+# trace_file_A100_w58_mixed_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w58-mixed-10ms.csv"
+	
+# plot_energy(trace_file_A100_w58_mixed_10ms, "NVIDIA A100 Mixed 10ms", "58 walkers", "qmcpack-w58-mixed-10ms-a100.pdf")
+# end
+
+# ╔═╡ 763fd3a0-b536-40df-9fa2-8f92eeb1c797
+# begin
+# trace_file_A100_w84_mixed_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w84-mixed-10ms.csv"
+	
+# plot_energy(trace_file_A100_w84_mixed_10ms, "NVIDIA A100 Mixed 10ms", "84 walkers", "qmcpack-w84-mixed-10ms-a100.pdf")
+# end
+
+# ╔═╡ 60a34c11-675b-4e7d-b833-a05087af2c0e
+# begin
+# trace_file_amd_1ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w38-full-1ms.csv"
+	
+# plot_energy(trace_file_amd_1ms, "AMD MI250x Full 1ms", "38 walkers", "qmcpack-w38-full-1ms-mi250x.pdf")
+# end
+
+# ╔═╡ 2ff1dd15-9850-4f5f-94b0-269d127087d9
+# begin
+# trace_file_amd = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w38-full-10ms.csv"
+	
+# plot_energy(trace_file_amd, "AMD MI250x Full 10ms", "38 walkers", "qmcpack-w38-full-10ms-mi250x.pdf")
+# end
+
+# ╔═╡ 1868b0bc-fcd0-41a3-89dc-1639e934f16a
+# begin
+# trace_file_amd_w38_100ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w38-full-100ms.csv"
+	
+# plot_energy(trace_file_amd_w38_100ms, "AMD MI250x Full 100ms", "38 walkers", "qmcpack-w38-full-100ms-mi250x.pdf") 
+# end
+
+# ╔═╡ 25b4ac91-8b31-4105-9508-5157ee96e6d2
+# begin
+# trace_file_amd_w38_mixed_1ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w38-mixed-1ms.csv"
+	
+# plot_energy(trace_file_amd_w38_mixed_1ms, "AMD MI250x Mixed 1ms", "38 walkers", "qmcpack-w38-mixed-1ms-mi250x.pdf") 
+# end
+
+# ╔═╡ 7c4a438a-760c-4e3d-aa6a-c566e2fcfb39
+# begin
+# trace_file_amd_w38_1s = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w38-mixed-1s.csv"
+	
+# plot_energy(trace_file_amd_w38_1s, "AMD MI250x Mixed 1s", "38 walkers") 
+# end
+
+# ╔═╡ d97104c1-5e5d-461e-ae92-ca8eaab19011
+# begin
+# trace_file_amd_w58_mixed_1s = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w52-mixed-1s.csv"
+	
+# plot_energy(trace_file_amd_w58_mixed_1s, "AMD MI250x Mixed 1s", "52 walkers") 
+# end
+
+# ╔═╡ 4b9095a7-c85c-4087-bcb4-f2371f967481
+# begin
+# trace_file_amd_w58_mixed_100ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w52-mixed-100ms.csv"
+	
+# plot_energy(trace_file_amd_w58_mixed_100ms, "AMD MI250x Mixed 100ms", "52 walkers") 
+# end
+
+# ╔═╡ 4b273066-1468-4c1e-b79a-0b8d2e1c0cc6
+begin
+trace_file_amd_w52_mixed_1ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w52-mixed-1ms.csv"
+	
+plot_energy(trace_file_amd_w52_mixed_1ms, "AMD MI250x Mixed 1ms", "52 walkers", "qmcpack-w52-mixed-1ms-mi250x.pdf") 
 end
+
+# ╔═╡ 7a416ee0-cb73-41d1-9105-ef2e985acec8
+# begin
+# trace_file_a100_w38_full_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w38-full-10ms.csv"
+	
+# plot_energy(trace_file_a100_w38_full_10ms, "NVIDIA A100 Full 10ms", "38 walkers", "qmcpack-w38-full-10ms-a100.pdf") 
+# end
+
+# ╔═╡ 33459f50-16dc-43a7-b7db-84816a174fdb
+# begin
+# trace_file_a100_w52_mixed_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w52-mixed-10ms.csv"
+	
+# plot_energy(trace_file_a100_w52_mixed_10ms, "NVIDIA A100 Mixed 10ms", "52 walkers", "qmcpack-w52-mixed-10ms-a100.pdf") 
+# end
+
+# ╔═╡ 28399ff6-1eb7-4b3b-a3b6-0a876164e385
+# begin
+# trace_file_a100_w38_mixed_10ms = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-a100/power-NiO-S128-w38-mixed-10ms.csv"
+
+# plot_energy(trace_file_a100_w38_mixed_10ms, "NVIDIA A100 Mixed 10ms", "38 walkers", "qmcpack-w38-mixed-10ms-a100.pdf") 
+# end
+
+# ╔═╡ 3b7ed89e-222a-4b2c-a52d-86c8ea0491c4
+# begin
+# trace_file_mixed_w84 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w84-mixed-10ms.csv"
+	
+# plot_energy(trace_file_mixed_w84, "NVIDIA H100 Mixed 10ms", "84 walkers", "qmcpack-w84-mixed-10ms-h100.pdf")
+# end
+
+# ╔═╡ 676a2b93-8ed9-4ebf-95d6-8b836ddbed94
+# begin
+# trace_file_mixed_w58 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w58-mixed-10ms.csv"
+	
+# plot_energy(trace_file_mixed_w58, "NVIDIA H100 Mixed 10ms", "58 walkers", "qmcpack-w58-mixed-10ms-h100.pdf")
+# end
+
+# ╔═╡ 11b5a4ba-49f6-409a-8933-995c4fd49cbb
+# begin
+# trace_file_full_w58 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w58-full-10ms.csv"
+	
+# plot_energy(trace_file_full_w58, "NVIDIA H100 Full 10ms", "58 walkers", "qmcpack-w58-full-10ms-h100.pdf")
+# end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -96,7 +301,7 @@ Plots = "~1.40.8"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.4"
+julia_version = "1.10.5"
 manifest_format = "2.0"
 project_hash = "4734cde63601d1e95d3331c7104e17823bc465b1"
 
@@ -198,7 +403,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.5+0"
+version = "1.1.1+0"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -517,8 +722,13 @@ uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
 version = "8.4.0+0"
 
 [[deps.LibGit2]]
-deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
+deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
+
+[[deps.LibGit2_jll]]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
+uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
+version = "1.6.4+0"
 
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
@@ -624,7 +834,7 @@ version = "1.1.9"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.2+0"
+version = "2.28.2+1"
 
 [[deps.Measures]]
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
@@ -642,7 +852,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.10.11"
+version = "2023.1.10"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -680,12 +890,12 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.21+4"
+version = "0.3.23+4"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+0"
+version = "0.8.1+2"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -713,7 +923,7 @@ version = "1.6.3"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+0"
+version = "10.42.0+1"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
@@ -741,7 +951,7 @@ version = "0.43.4+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.2"
+version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
@@ -832,7 +1042,7 @@ deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [[deps.Random]]
-deps = ["SHA", "Serialization"]
+deps = ["SHA"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.Ratios]]
@@ -920,6 +1130,7 @@ version = "1.2.1"
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+version = "1.10.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
@@ -940,7 +1151,7 @@ version = "1.4.3"
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.9.0"
+version = "1.10.0"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
@@ -961,9 +1172,9 @@ uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
 
 [[deps.SuiteSparse_jll]]
-deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
+deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+6"
+version = "7.2.1+1"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -1245,7 +1456,7 @@ version = "1.5.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+0"
+version = "1.2.13+1"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1286,7 +1497,7 @@ version = "0.15.2+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+0"
+version = "5.11.0+0"
 
 [[deps.libdecor_jll]]
 deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
@@ -1338,7 +1549,7 @@ version = "1.52.0+1"
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+0"
+version = "17.4.0+2"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1362,8 +1573,33 @@ version = "1.4.1+1"
 # ╔═╡ Cell order:
 # ╟─259e151c-7c3e-11ef-19d0-bf5bc8811447
 # ╠═03ea1628-a764-4fd1-b13d-f607346998a2
-# ╠═14ef75c8-77b2-488f-98c2-f2df95c3f153
+# ╠═3759d4b1-d36f-45ce-a4d2-d901e6de67f2
+# ╠═8e0986b5-1e5a-4abb-a6ef-78b60f21c7bf
+# ╠═fe987f15-a7ad-469f-a637-eb5010b7b836
 # ╠═c134b1ef-8a98-4d77-b719-8e86062395e3
+# ╠═55d0ca8c-931e-45d0-9c2f-7ac35fb9e964
+# ╠═d3136227-3381-4d47-af1e-08961629c52c
 # ╠═a7bd2742-8340-41e9-87ec-b5e6a78070dd
+# ╠═0ddad5e7-0ec0-47cc-a6e0-fdece6b96101
+# ╠═b410edc1-3d01-4eb9-ad7f-df57c9b64d9d
+# ╠═76010b94-7946-4a21-8ca7-6ab64a82a982
+# ╠═7c613b96-0d95-4dd7-956f-fb9f2cb874cf
+# ╠═924e7896-9c5b-4202-be9d-69144130dbbd
+# ╠═76e305e3-7074-439d-949c-dca7ee4181dc
+# ╠═763fd3a0-b536-40df-9fa2-8f92eeb1c797
+# ╠═60a34c11-675b-4e7d-b833-a05087af2c0e
+# ╠═2ff1dd15-9850-4f5f-94b0-269d127087d9
+# ╠═1868b0bc-fcd0-41a3-89dc-1639e934f16a
+# ╠═25b4ac91-8b31-4105-9508-5157ee96e6d2
+# ╠═7c4a438a-760c-4e3d-aa6a-c566e2fcfb39
+# ╠═d97104c1-5e5d-461e-ae92-ca8eaab19011
+# ╠═4b9095a7-c85c-4087-bcb4-f2371f967481
+# ╠═4b273066-1468-4c1e-b79a-0b8d2e1c0cc6
+# ╠═7a416ee0-cb73-41d1-9105-ef2e985acec8
+# ╠═33459f50-16dc-43a7-b7db-84816a174fdb
+# ╠═28399ff6-1eb7-4b3b-a3b6-0a876164e385
+# ╠═3b7ed89e-222a-4b2c-a52d-86c8ea0491c4
+# ╠═676a2b93-8ed9-4ebf-95d6-8b836ddbed94
+# ╠═11b5a4ba-49f6-409a-8933-995c4fd49cbb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
