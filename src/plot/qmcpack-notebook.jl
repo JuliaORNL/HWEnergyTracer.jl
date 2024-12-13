@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 259e151c-7c3e-11ef-19d0-bf5bc8811447
 md"""
-# Power Analysis
+# QMCPACK NiO a512 Benchmark Power Analysis
 """
 
 # ╔═╡ 03ea1628-a764-4fd1-b13d-f607346998a2
@@ -29,22 +29,22 @@ function plot_energy(trace_file, title, annotated_text = "", figure_name = "")
 	t, P, T, U = df[!,1], df[!,2], df[!,3], df[!,4]
 	e = NumericalIntegration.cumul_integrate(t,P)
 
-	dmc_i = 1
-	for i in 1:length(t)
-		if t[i] > 1200
-			dmc_i = i
-			break
-		end
-	end
-	@show dmc_i
-	dmc_gpu = U[dmc_i:length(U)-100]
-	dmc_t   = t[dmc_i:length(t)-100]
+	# dmc_i = 1
+	# for i in 1:length(t)
+	# 	if t[i] > 1200
+	# 		dmc_i = i
+	# 		break
+	# 	end
+	# end
+	# @show dmc_i
+	# dmc_gpu = U[dmc_i:length(U)-100]
+	# dmc_t   = t[dmc_i:length(t)-100]
 
-	average_gpu = NumericalIntegration.integrate(dmc_t, dmc_gpu)/(dmc_t[end]-dmc_t[begin])
-	@show average_gpu
+	# average_gpu = NumericalIntegration.integrate(dmc_t, dmc_gpu)/(dmc_t[end]-dmc_t[begin])
+	# @show average_gpu
 	#@show dmc_t
-	
- #    f = zip(t,U) 
+
+ #    f = zip(t,e) 
 	# for i in f
 	# 	if i[1] > 525
 	# 	    @show i
@@ -62,7 +62,7 @@ function plot_energy(trace_file, title, annotated_text = "", figure_name = "")
 	xlims = (0, xlimit)
 	ylims = (0, ylimit)
 	
-   #xlims = (0, 800)
+    #xlims = (0, 700)
 	# ylims = (0, 400)
 	
 	Plots.plot!(p, 
@@ -71,7 +71,7 @@ function plot_energy(trace_file, title, annotated_text = "", figure_name = "")
 		        ylabel = "W, %, C", 
 		        xlims = xlims, 
 		        ylims = ylims,
-		        xminorticks = 4,
+		        xminorticks = 8,
 		        yminorticks = 5,
 		        legend=:topleft )
 	
@@ -233,11 +233,11 @@ end
 # end
 
 # ╔═╡ 4b273066-1468-4c1e-b79a-0b8d2e1c0cc6
-begin
-trace_file_amd_w52_mixed_1ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w52-mixed-1ms.csv"
+# begin
+# trace_file_amd_w52_mixed_1ms = root_dir*"/express-data/2025-ashes/qmcpack/amd-mi250x/power-NiO-S128-w52-mixed-1ms.csv"
 	
-plot_energy(trace_file_amd_w52_mixed_1ms, "AMD MI250x Mixed 1ms", "52 walkers", "qmcpack-w52-mixed-1ms-mi250x.pdf") 
-end
+# plot_energy(trace_file_amd_w52_mixed_1ms, "AMD MI250x Mixed 1ms", "52 walkers", "qmcpack-w52-mixed-1ms-mi250x.pdf") 
+# end
 
 # ╔═╡ 7a416ee0-cb73-41d1-9105-ef2e985acec8
 # begin
@@ -279,6 +279,20 @@ end
 # trace_file_full_w58 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w58-full-10ms.csv"
 	
 # plot_energy(trace_file_full_w58, "NVIDIA H100 Full 10ms", "58 walkers", "qmcpack-w58-full-10ms-h100.pdf")
+# end
+
+# ╔═╡ fb948c9a-2881-484a-a55f-afe78bda2f47
+# begin
+# trace_file_mixed_w58 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w58-mixed-10ms.csv"
+	
+# plot_energy(trace_file_mixed_w58, "NVIDIA H100 Mixed 10ms", "58 walkers", "qmcpack-w58-mixed-10ms-h100.pdf")
+# end
+
+# ╔═╡ 22b670ae-21c0-4cfc-8119-c5bb33812469
+# begin
+# trace_file_mixed_w84 = root_dir*"/express-data/2025-ashes/qmcpack/nvidia-h100/power-NiO-S128-w84-mixed-10ms.csv"
+	
+# plot_energy(trace_file_mixed_w84, "NVIDIA H100 Mixed 10ms", "84 walkers", "qmcpack-w84-mixed-10ms-h100.pdf")
 # end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1571,7 +1585,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─259e151c-7c3e-11ef-19d0-bf5bc8811447
+# ╠═259e151c-7c3e-11ef-19d0-bf5bc8811447
 # ╠═03ea1628-a764-4fd1-b13d-f607346998a2
 # ╠═3759d4b1-d36f-45ce-a4d2-d901e6de67f2
 # ╠═8e0986b5-1e5a-4abb-a6ef-78b60f21c7bf
@@ -1601,5 +1615,7 @@ version = "1.4.1+1"
 # ╠═3b7ed89e-222a-4b2c-a52d-86c8ea0491c4
 # ╠═676a2b93-8ed9-4ebf-95d6-8b836ddbed94
 # ╠═11b5a4ba-49f6-409a-8933-995c4fd49cbb
+# ╠═fb948c9a-2881-484a-a55f-afe78bda2f47
+# ╠═22b670ae-21c0-4cfc-8119-c5bb33812469
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
